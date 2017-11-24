@@ -1,0 +1,2 @@
+LIBRARY DLL_ASM				; Nazwa biblioteki zgodna z nazw¹ projektu
+EXPORTS MyProc1				; Exportowana funkcja o danej nazwie
