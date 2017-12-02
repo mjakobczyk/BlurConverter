@@ -4,10 +4,11 @@
 
 extern "C"
 {
-	__declspec(dllexport) void __stdcall blurTransformRowC(uint8_t * row, int rowSize, int radius)
+	__declspec(dllexport) 
+		void __stdcall BlurTransformRowC(uint8_t * row, int rowSize, int radius)
 	{
-		printf("Hello from DLL_C !\n");
-		int c = 0;
+		unsigned int c = 0;
+
 		for (int x = 0; x < rowSize; x++)
 		{
 			int red = row[c];
