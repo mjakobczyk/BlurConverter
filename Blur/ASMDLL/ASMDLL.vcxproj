@@ -93,6 +93,10 @@
       <ModuleDefinitionFile>blur_ASM.def</ModuleDefinitionFile>
       <NoEntryPoint>true</NoEntryPoint>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y /d "$(Targetdir)DLL_ASM.dll" "$(SolutionDir)MAIN_PROGRAM\bin\Debug\DLL_ASM.dll"</Command>
+      <Message>Copy DLL to Debug folder</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
