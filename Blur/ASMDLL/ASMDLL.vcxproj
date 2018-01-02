@@ -125,6 +125,9 @@
       <ModuleDefinitionFile>blur_ASM.def</ModuleDefinitionFile>
       <NoEntryPoint>true</NoEntryPoint>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /y /d "$(Targetdir)DLL_ASM.dll" "$(SolutionDir)MAIN_PROGRAM\bin\Release\DLL_ASM.dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <MASM Include="blur_ASM.asm">

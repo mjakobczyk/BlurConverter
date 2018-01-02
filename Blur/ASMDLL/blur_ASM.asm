@@ -1,117 +1,79 @@
 .DATA
-	max dd 255
-	min dd 0
-	next dd 3
-
-	_393 dd 0.393
-	_769 dd 0.769
-	_189 dd 0.189
-	
-	_349 dd 0.349
-	_686 dd 0.686
-	_168 dd 0.168
-
-	_272 dd 0.272
-	_534 dd 0.534
-	_131 dd 0.131
+	max			dd		255
+	min			dd		0
+	nastepny	dd		3
+	suma		dd		0
+	ilosc		dd		0
 
 .CODE
 BlurTransformRowASM proc
-		mov rbx, 0h
-loop_start:	
-		xorps xmm0, xmm0;
-		xorps xmm1, xmm1;
-		xorps xmm2, xmm2
 
-		xor	rax, rax
-		mov al, byte ptr [rcx+rbx]; 
-		cvtsi2ss  xmm0, eax; red color in xmm0
+; Argumenty, ktore przyjmuje funkcja:
+; RCX				  - szerokosc bitmapy
+; RDX				  - wysokosc bitmapy tablicy pikseli otaczajacych wiersz
+; R8				  - promien wskazujacy obszar pikseli
+; R9				  - wskaznik na pierwszy element zmienianego wiersza
+; DWORD PTR[rbp + 48] - wskaznik do tablicy pikseli otaczajacych wiersz
+
+start:								; Etykieta rozpoczecia funkcji
+
+		mov rbx, 0					; rbx jest offsetem, ktory sluzy do poruszania sie po tablicach
+									; Indeksowanie rozpoczynamy od 0, wiec umieszczamy tam 0
+
+		push rsi					; Zachowaj wartosc rejestru RSI na stosie
+		push rdi					; Zachowaj wartosc rejestru RDI na stosie
+		push r12					; Zachowaj wartosc rejestru R12 na stosie
+		push r13					; Zachowaj wartosc rejestru R13 na stosie
+		push r14					; Zachowaj wartosc rejestru R14 na stosie
+		push r15					; Zachowaj wartosc rejestru R15 na stosie
+
+		;mov rsi, r9					; Ustaw rejestr RSI jako pocz¹tek wiersza pixeli
+
+
+wiersz_petla:						; Etykieta glownej petli
+
+		xorps xmm0, xmm0			; Wyczysc rejestr XMM0
+		xorps xmm1, xmm1			; Wyczysc rejestr XMM1
+		xorps xmm2, xmm2			; Wyczysc rejestr XMM2
+		xorps xmm3, xmm3			; Wyczysc rejestr XMM3
+		xorps xmm4, xmm4			; Wyczysc rejestr XMM4
+		xorps xmm5, xmm5			; Wyczysc rejestr XMM5
+		xorps xmm6, xmm6			; Wyczysc rejestr XMM6
+		xorps xmm7, xmm7			; Wyczysc rejestr XMM7
+
+		xor	rax, rax				; Wyczysc rejestr RAX
+		mov al, byte ptr [r9+rbx]	; Do najnizszej polowki rejestru rax wrzuc aktualny piksel z wiersza
+
+
+		cvtsi2ss xmm0, eax			; Zamien typ int na double odpowiednim rozkazem i umiesc go w xmm0
+									; CVTSI2SS — Convert Dword Integer to Scalar Single-Precision FP Value
+
+									; TODO
+									; TUtaj ma miejsce wlasciwy algorytm tego, co sie bedzie dzialo po tym,
+									; jak w xmm0 umiescimy juz piksel
+
+		cvttss2si rax, xmm0;		;
+									; CVTTSS2SI — Convert with Truncation Scalar Single-Precision FP Value to Dword Integer
 		
-		xor	rax, rax
-		mov al, byte ptr [rcx+rbx+1];
-		cvtsi2ss  xmm1, eax;  green color in xmm1
+		mov rax, 150
 		
-		xor	rax, rax
-		mov al, byte ptr [rcx+rbx+2]; 
-		cvtsi2ss  xmm2, eax; blue color in xmm2
-		
-		;---------------------------------------------
-		xorps xmm4, xmm4;
-		xorps xmm5, xmm5;
-		xorps xmm6, xmm6;
+		mov byte ptr [r9+rbx], al	; Zapisz piksel
 
-		movaps xmm4, xmm0
-		movaps xmm5, xmm1
-		movaps xmm6, xmm2
+		add rbx, 1
+		dec rcx
+		mov rax, rcx
+		jnz wiersz_petla
 
-		;movaps xmm7, _393
+koniec:
 
-		mulss xmm4, _393
-		mulss xmm5, _769
-		mulss xmm6, _189
-		addps xmm4, xmm5 ; xmm5 is free now
-		addps xmm4, xmm6 ; xmm6 is free now
-		
-		xor	rax, rax
-		cvttss2si   rax, xmm4;
-		cmp eax, max
-		jb short red_negative
-		mov eax, max
-		red_negative:
-		mov byte ptr [rcx+rbx], al ; saving blue color
-		
-		
-		;--------------------------------------
-		xorps xmm4, xmm4;
-		xorps xmm5, xmm5;
-		xorps xmm6, xmm6;
+		pop r15						; Pobierz wartosc rejestru R15 ze stosu
+		pop r14						; Pobierz wartosc rejestru R14 ze stosu
+		pop r13						; Pobierz wartosc rejestru R13 ze stosu
+		pop r12						; Pobierz wartosc rejestru R12 ze stosu
+		pop rdi						; Pobierz wartosc rejestru RDI ze stosu
+		pop rsi						; Pobierz wartosc rejestru RSI ze stosu
 
-		movaps xmm4, xmm0
-		movaps xmm5, xmm1
-		movaps xmm6, xmm2
 
-		mulss xmm4, _349
-		mulss xmm5, _686
-		mulss xmm6, _168
-		addps xmm4, xmm5; xmm5 is free now
-		addps xmm4, xmm6 ;xmm6 is free now
-		
-		xor	rax, rax
-		cvttss2si   rax, xmm4;
-		cmp eax, max
-		jb green_negative
-		mov eax,max
-		green_negative:
-		mov byte ptr [rcx+rbx+1], al ; saving green color
-				
-		;-----------------------------------------------
-		xorps xmm4, xmm4;
-		xorps xmm5, xmm5;
-		xorps xmm6, xmm6;
-
-		movaps xmm4, xmm0
-		movaps xmm5, xmm1
-		movaps xmm6, xmm2
-
-		mulss xmm4, _272
-		mulss xmm5, _534
-		mulss xmm6, _131
-		addps xmm4, xmm5 ; xmm5 is free now
-		addps xmm4, xmm6 ; xmm6 is free now
-		
-		xor	rax, rax
-		cvttss2si   rax, xmm4;
-		cmp eax, max
-		jb blue_negative
-		mov eax, max
-		blue_negative: 
-		mov byte ptr [rcx+rbx+2], al ; saving blue color
-
-		;------------------------------------------------------
-		add rbx, 3h
-		dec rdx
-		mov rax, rdx
-		jnz loop_start
 ret
 
 BlurTransformRowASM endp

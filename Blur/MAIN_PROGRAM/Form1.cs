@@ -56,7 +56,6 @@ namespace MAIN_PROGRAM
         private bool inputPathSet = false;
         private bool outputPathSet = false;
         private bool conversionMethodSet = false;
-        private bool threadsSet = false;
 
         private int threadsAmount = 0;
         private int radius = 0;
@@ -148,121 +147,120 @@ namespace MAIN_PROGRAM
                 MaxDegreeOfParallelism = threadsAmount
             };
 
-            // Dla DLL napisanej w C
-            if (conversionType.Equals(Conversion.C))
+            // Wykonaj konwersjê
+            Parallel.ForEach(outputArray, options, (row, state, index) =>
             {
-                // Wykonaj konwersjê
-                Parallel.ForEach(outputArray, options, (row, state, index) =>
+                // Wysokoœæ lokalnej tablicy obliczanej na podstawie
+                // wybranego przez u¿ytkownika promienia
+                int localArrayHeight = 1 + 2 * radius;
+
+                // Lokalna tablica
+                byte[] surroundingArea;
+
+                // Utwórz lokaln¹ tablicê odzwierciedlaj¹c¹ bezpoœredni
+                // obszar wokó³ zadanego wiersza obliczanego przez dany
+                // w¹tek. Obszar ten jest zale¿ny od wybranego przez
+                // u¿ytkownika promienia 
+                surroundingArea = new byte[localArrayHeight * arrayWidth];
+
+                // Je¿eli indeks wiersza znajduje siê w przedziale od
+                // górnego marginesu do promienia
+                if (index >= 0 && index < radius)
                 {
-                    // Wysokoœæ lokalnej tablicy obliczanej na podstawie
-                    // wybranego przez u¿ytkownika promienia
-                    int localArrayHeight = 1 + 2 * radius;
-
-                    // Lokalna tablica
-                    byte [] surroundingArea;
-
-                    // Utwórz lokaln¹ tablicê odzwierciedlaj¹c¹ bezpoœredni
-                    // obszar wokó³ zadanego wiersza obliczanego przez dany
-                    // w¹tek. Obszar ten jest zale¿ny od wybranego przez
-                    // u¿ytkownika promienia 
-                    surroundingArea = new byte[localArrayHeight * arrayWidth];
-
-                    // Je¿eli indeks wiersza znajduje siê w przedziale od
-                    // górnego marginesu do promienia
-                    if (index >=0 && index < radius)
+                    for (int j = 0; j < localArrayHeight; ++j)
                     {
-                        for (int j = 0; j < localArrayHeight; ++j)
+                        int temporaryRowAccess = 0;
+                        int offset = Convert.ToInt32(index) - radius + j;
+
+                        if (offset < 0)
                         {
-                            int temporaryRowAccess = 0;
-                            int offset = Convert.ToInt32(index) - radius + j;
-
-                            if (offset < 0)
-                            {
-                                temporaryRowAccess = arrayHeight - 1 + offset;
-                            }
-
-                            for (int i = 0; i < arrayWidth; i += 3)
-                            {
-                                if (temporaryRowAccess > 0)
-                                {
-                                    surroundingArea[(j * (arrayWidth)) + i] = inputArray[temporaryRowAccess][i];
-                                    surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[temporaryRowAccess][i + 1];
-                                    surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[temporaryRowAccess][i + 2];
-                                }
-                                else
-                                {
-                                    surroundingArea[(j * (arrayWidth)) + i] = inputArray[index - radius + j][i];
-                                    surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[index - radius + j][i + 1];
-                                    surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[index - radius + j][i + 2];
-                                }
-                            }
-
+                            temporaryRowAccess = arrayHeight - 1 + offset;
                         }
-                    }
-                    // Je¿eli indeks wiersza znajduje siê w miejscu, gdzie
-                    // zawsze bêdzie obszar do pobrania (nie wykracza poza
-                    // marginesy z ¿adnej strony)
-                    else if (index >= radius && index < (arrayHeight - radius))
-                    {
-                        // Przeiteruj przez ca³¹ tablicê wejœciow¹ dla danego
-                        // obszaru i przekopiuj z niej elementy do lokalnej
-                        // tablicy, która bedzie przekazana do DLL
-                        for (int j = 0; j < localArrayHeight; ++j)
-                        { 
-                            for (int i = 0; i < arrayWidth; i+= 3)
+
+                        for (int i = 0; i < arrayWidth; i += 3)
+                        {
+                            if (temporaryRowAccess > 0)
                             {
-                                // Przekopiuj wszystkie wartoœci RBG
-                                surroundingArea[(j * (arrayWidth)) + i]     = inputArray[index - radius + j][i];
+                                surroundingArea[(j * (arrayWidth)) + i] = inputArray[temporaryRowAccess][i];
+                                surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[temporaryRowAccess][i + 1];
+                                surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[temporaryRowAccess][i + 2];
+                            }
+                            else
+                            {
+                                surroundingArea[(j * (arrayWidth)) + i] = inputArray[index - radius + j][i];
                                 surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[index - radius + j][i + 1];
                                 surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[index - radius + j][i + 2];
                             }
                         }
 
                     }
-                    // Je¿eli indeks wiersza znajduje siê w przedziale od
-                    // dolnego promienia do dolnego marginesu bitmapy
-                    else if (index >= (arrayHeight - radius) && index < (arrayHeight - 1))
+                }
+                // Je¿eli indeks wiersza znajduje siê w miejscu, gdzie
+                // zawsze bêdzie obszar do pobrania (nie wykracza poza
+                // marginesy z ¿adnej strony)
+                else if (index >= radius && index < (arrayHeight - radius))
+                {
+                    // Przeiteruj przez ca³¹ tablicê wejœciow¹ dla danego
+                    // obszaru i przekopiuj z niej elementy do lokalnej
+                    // tablicy, która bedzie przekazana do DLL
+                    for (int j = 0; j < localArrayHeight; ++j)
                     {
-                        for (int j = 0; j < localArrayHeight; ++j)
+                        for (int i = 0; i < arrayWidth; i += 3)
                         {
-                            int temporaryRowAccess = (arrayHeight - 1);
-                            int offset = Convert.ToInt32(index) - radius + j;
-
-                            if (offset > (arrayHeight - 1))
-                            {
-                                temporaryRowAccess = offset - (arrayHeight);
-                            }
-
-                            for (int i = 0; i < arrayWidth; i += 3)
-                            {
-                                if (temporaryRowAccess < (arrayHeight - 1))
-                                {
-                                    surroundingArea[(j * (arrayWidth)) + i] = inputArray[temporaryRowAccess][i];
-                                    surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[temporaryRowAccess][i + 1];
-                                    surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[temporaryRowAccess][i + 2];
-                                }
-                                else
-                                {
-                                    surroundingArea[(j * (arrayWidth)) + i] = inputArray[index - radius + j][i];
-                                    surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[index - radius + j][i + 1];
-                                    surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[index - radius + j][i + 2];
-                                }
-                            }
-
+                            // Przekopiuj wszystkie wartoœci RBG
+                            surroundingArea[(j * (arrayWidth)) + i] = inputArray[index - radius + j][i];
+                            surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[index - radius + j][i + 1];
+                            surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[index - radius + j][i + 2];
                         }
                     }
 
+                }
+                // Je¿eli indeks wiersza znajduje siê w przedziale od
+                // dolnego promienia do dolnego marginesu bitmapy
+                else if (index >= (arrayHeight - radius) && index < (arrayHeight - 1))
+                {
+                    for (int j = 0; j < localArrayHeight; ++j)
+                    {
+                        int temporaryRowAccess = (arrayHeight - 1);
+                        int offset = Convert.ToInt32(index) - radius + j;
+
+                        if (offset > (arrayHeight - 1))
+                        {
+                            temporaryRowAccess = offset - (arrayHeight);
+                        }
+
+                        for (int i = 0; i < arrayWidth; i += 3)
+                        {
+                            if (temporaryRowAccess < (arrayHeight - 1))
+                            {
+                                surroundingArea[(j * (arrayWidth)) + i] = inputArray[temporaryRowAccess][i];
+                                surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[temporaryRowAccess][i + 1];
+                                surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[temporaryRowAccess][i + 2];
+                            }
+                            else
+                            {
+                                surroundingArea[(j * (arrayWidth)) + i] = inputArray[index - radius + j][i];
+                                surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[index - radius + j][i + 1];
+                                surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[index - radius + j][i + 2];
+                            }
+                        }
+
+                    }
+                }
+
+                // Dla DLL napisanej w C
+                if (conversionType.Equals(Conversion.C))
+                {
                     // Wywo³aj w³aœciw¹ funkcjê
                     BlurTransformRowC(arrayWidth, localArrayHeight, radius, row, surroundingArea);
                 }
-                );
-            }
-            // Dla DLL napisanej w ASM
-            else if (conversionType.Equals(Conversion.ASM))
-            {
-                // Wykonaj konwersjê
-                //Parallel.ForEach(outputArray, options, (row) => MyProc1(row, arrayWidth / 3, 0));
-            }
+                // Dla DLL napisanej w ASM
+                else if (conversionType.Equals(Conversion.ASM))
+                {
+                    // Wykonaj konwersjê
+                    BlurTransformRowASM(arrayWidth, localArrayHeight, radius, row, surroundingArea);
+                }
+            });
 
             return;
         }
@@ -278,7 +276,6 @@ namespace MAIN_PROGRAM
             ASM_RadioBtn.Checked = false;
             this.conversionMethodSet = true;
             Threads_Chkbx.Checked = true;
-            this.threadsSet = true;
             Radius_Tbx.Text = "1";
             Radius_Trb.Value = 1;
         }
