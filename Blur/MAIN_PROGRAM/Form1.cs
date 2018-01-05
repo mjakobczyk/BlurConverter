@@ -31,7 +31,7 @@ namespace MAIN_PROGRAM
 
         // Function import from ASM
         [DllImport("DLL_ASM.dll")]
-        public static extern void BlurTransformRowASM(int width, int height, int radius, byte[] row, byte[] surroundingArea);
+        public static extern void BlurTransformRowASM(int width, int height, byte[] row, byte[] surroundingArea, int radius);
 
         #endregion
 
@@ -258,7 +258,7 @@ namespace MAIN_PROGRAM
                 else if (conversionType.Equals(Conversion.ASM))
                 {
                     // Wykonaj konwersjê
-                    BlurTransformRowASM(arrayWidth, localArrayHeight, radius, row, surroundingArea);
+                    BlurTransformRowASM(arrayWidth, localArrayHeight, row, surroundingArea, radius);
                 }
             });
 
