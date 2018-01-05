@@ -26,9 +26,9 @@ start:								; Etykieta rozpoczecia funkcji, odlozenie na stos wartosci,
 									; inicjalizacja licznika
 
 		xor r10, r10				; Zerujemy rejestr r10
-		mov r10d, dword ptr[rbp+48]; Do rejestru wpisujemy wartosc promienia
-		add r10d, dword ptr[rbp+48]; Dodajemy wartosc promienia dwa razy zeby uzyskac 3*promien
-		add r10d, dword ptr[rbp+48]; Bedzie to potrzebne do wyznaczenia warunku startu i stopu
+		mov r10d, dword ptr[rbp+48] ; Do rejestru wpisujemy wartosc promienia
+		add r10d, dword ptr[rbp+48] ; Dodajemy wartosc promienia dwa razy zeby uzyskac 3*promien
+		add r10d, dword ptr[rbp+48] ; Bedzie to potrzebne do wyznaczenia warunku startu i stopu
 
 		mov rbx, r10				; rbx jest offsetem, ktory sluzy do poruszania sie po tablicach
 									; Indeksowanie rozpoczynamy od 0, wiec umieszczamy tam 0
@@ -57,67 +57,77 @@ start:								; Etykieta rozpoczecia funkcji, odlozenie na stos wartosci,
 
 wiersz_petla:						; Etykieta glownej petli
 
+		xor r13, r13											; Wyczysc rejestr r13 ktory posluzy jako offset
+		mov r13, rbx											; Do offsetu dodaj przesuniecie glownego wiersza
+
 		xor r10, r10											; Wyczysc rejestr r10 przed uzyciem
-		movzx r10, byte ptr [rdi + rbx - 3]						; Pobierz piksel z tablicy wpisujac go do r10
+		mov r10b, byte ptr [rdi + r13 - 3]						; Pobierz piksel z tablicy wpisujac go do r10
 		xorpd xmm0, xmm0										; Wyczysc rejestr XMM0
 		cvtsi2sd xmm0, r10										; Skonweruj inta na flota i wpisz do xmm1
 		
 		xor r10, r10											; Wyczysc rejestr r10 przed uzyciem
-		movzx r10, byte ptr [rdi + rbx]							; Pobierz piksel z tablicy wpisujac go do r10
+		mov r10b, byte ptr [rdi + r13]							; Pobierz piksel z tablicy wpisujac go do r10
 		xorpd xmm1, xmm1										; Wyczysc rejestr XMM1
 		cvtsi2sd xmm1, r10										; Skonweruj inta na flota i wpisz do xmm1
 		addsd xmm0, xmm1										; Wykorzystaj instrukcje SSE2 i dodaj do siebie xmm
 
 		xor r10, r10											; Wyczysc rejestr r10 przed uzyciem
-		movzx r10, byte ptr [rdi + rbx + 3]						; Pobierz piksel z tablicy wpisujac go do r10
+		mov r10b, byte ptr [rdi + r13 + 3]						; Pobierz piksel z tablicy wpisujac go do r10
 		xorpd xmm2, xmm2										; Wyczysc rejestr XMM2
 		cvtsi2sd xmm2, r10										; Skonweruj inta na flota i wpisz do xmm1
 		addsd xmm0, xmm2										; Wykorzystaj instrukcje SSE2 i dodaj do siebie xmm
 
+		add r13, r11											; Przejdz do kolejnego wiersza dodajac szerokosc bitmapy
+
 		xor r10, r10											; Wyczysc rejestr r10 przed uzyciem
-		movzx r10, byte ptr [rdi + rbx + 4800 - 3]				; Pobierz piksel z tablicy wpisujac go do r10
+		mov r10b, byte ptr [rdi + r13 - 3]						; Pobierz piksel z tablicy wpisujac go do r10
 		xorpd xmm3, xmm3										; Wyczysc rejestr XMM3
 		cvtsi2sd xmm3, r10										; Skonweruj inta na flota i wpisz do xmm1
 		addsd xmm0, xmm3										; Wykorzystaj instrukcje SSE2 i dodaj do siebie xmm
 
 		xor r10, r10											; Wyczysc rejestr r10 przed uzyciem
-		movzx r10, byte ptr [rdi + rbx + 4800 + 3]				; Pobierz piksel z tablicy wpisujac go do r10
+		mov r10b, byte ptr [rdi + r13 + 3]						; Pobierz piksel z tablicy wpisujac go do r10
 		xorpd xmm4, xmm4										; Wyczysc rejestr XMM4
 		cvtsi2sd xmm4, r10										; Skonweruj inta na flota i wpisz do xmm1
 		addsd xmm0, xmm4										; Wykorzystaj instrukcje SSE2 i dodaj do siebie xmm
 
+		
+		add r13, r11											; Przejdz do ostatniego wiersza bitmapy
+
 		xor r10, r10											; Wyczysc rejestr r10 przed uzyciem
-		movzx r10, byte ptr [rdi + rbx + 4800 + 4800 - 3]		; Pobierz piksel z tablicy wpisujac go do r10
+		mov r10b, byte ptr [rdi + r13 - 3]						; Pobierz piksel z tablicy wpisujac go do r10
 		xorpd xmm5, xmm5										; Wyczysc rejestr XMM5
 		cvtsi2sd xmm5, r10										; Skonweruj inta na flota i wpisz do xmm1
 		addsd xmm0, xmm5										; Wykorzystaj instrukcje SSE2 i dodaj do siebie xmm
 
 		xor r10, r10											; Wyczysc rejestr r10 przed uzyciem
-		movzx r10, byte ptr [rdi + rbx + 4800 + 4800]			; Pobierz piksel z tablicy wpisujac go do r10
+		mov r10b, byte ptr [rdi + r13]							; Pobierz piksel z tablicy wpisujac go do r10
 		xorpd xmm6, xmm6										; Wyczysc rejestr XMM6
 		cvtsi2sd xmm6, r10										; Skonweruj inta na flota i wpisz do xmm1
 		addsd xmm0, xmm6										; Wykorzystaj instrukcje SSE2 i dodaj do siebie xmm
 
 		xor r10, r10											; Wyczysc rejestr r10 przed uzyciem
-		movzx r10, byte ptr [rdi + rbx + 4800 + 4800 + 3]		; Pobierz piksel z tablicy wpisujac go do r10
+		mov r10b, byte ptr [rdi + r13 + 3]						; Pobierz piksel z tablicy wpisujac go do r10
 		xorpd xmm7, xmm7										; Wyczysc rejestr XMM7
 		cvtsi2sd xmm7, r10										; Skonweruj inta na flota i wpisz do xmm1
 		addsd xmm0, xmm7										; Wykorzystaj instrukcje SSE2 i dodaj do siebie xmm
 
+		sub r13, r11											; Powrot do glownego wiersza bitmapy
+
 		xor r10, r10											; Wyczysc rejestr r10 przed uzyciem
-		movzx r10, byte ptr [rdi + rbx + 4800]					; Pobierz piksel z tablicy wpisujac go do r10
+		mov r10b, byte ptr [rdi + r13]							; Pobierz piksel z tablicy wpisujac go do r10
 		xorpd xmm1, xmm1										; Wyczysc rejestr XMM1
 		cvtsi2sd xmm1, r10										; Skonweruj inta na flota i wpisz do xmm1
 		addsd xmm0, xmm1										; Wykorzystaj instrukcje SSE2 i dodaj do siebie xmm
 
 		xor r12, r12											; Wyczysc rejestr r12 przed uzyciem
-		mov r12, ELEMENTS										; Do rejestru r12 wpisz ilosc elementow do podzielenia
+		mov r12b, ELEMENTS										; Do rejestru r12 wpisz ilosc elementow do podzielenia
 		xorpd xmm2, xmm2										; Wyczysc rejestr XMM2
 		cvtsi2sd xmm2, r12										; Skonweruj inta na flota i wpisz do xmm2
-		divsd xmm0, xmm2
+		divsd xmm0, xmm2										; Podziel sume przez liczbe elementow
 
 		xor rax, rax											; Wyczysc rejestr rax przed uzyciem
-		cvttsd2si  rax, xmm0;
+		cvttsd2si  rax, xmm0;									; Przekonwertuj flota na inta i wpisz do rax
 
 sprawdz_max:						; Etykieta do sprawdzenia czy piksel nie przekroczyl maksymalnej wartosci
 
