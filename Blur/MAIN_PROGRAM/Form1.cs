@@ -7,6 +7,7 @@
 
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -47,8 +48,8 @@ namespace MAIN_PROGRAM
         private static Bitmap inputBitmap = null;
         private static Bitmap outputBitmap = null;
 
-        private byte [][] inputArray;
-        private byte [][] outputArray;
+        private byte[][] inputArray = null;
+        private byte[][] outputArray = null;
 
         private int arrayHeight = 0;
         private int arrayWidth = 0;
@@ -251,13 +252,11 @@ namespace MAIN_PROGRAM
                 // Dla DLL napisanej w C
                 if (conversionType.Equals(Conversion.C))
                 {
-                    // Wywo³aj w³aœciw¹ funkcjê
                     BlurTransformRowC(arrayWidth, localArrayHeight, radius, row, surroundingArea);
                 }
                 // Dla DLL napisanej w ASM
                 else if (conversionType.Equals(Conversion.ASM))
                 {
-                    // Wykonaj konwersjê
                     BlurTransformRowASM(arrayWidth, localArrayHeight, row, surroundingArea, radius);
                 }
             });
@@ -292,7 +291,6 @@ namespace MAIN_PROGRAM
             {
                 inputPicture = Image.FromFile(inputFileDialog.FileName);
                 inputPicturePath = inputFileDialog.FileName;
-
                 inputBitmap = new Bitmap(inputPicture);
                 Input_Picture_Box.Image = inputPicture;
                 Loading_Path_Tbx.Text = inputPicturePath;
@@ -371,8 +369,8 @@ namespace MAIN_PROGRAM
             // póŸniejszego odczytania
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            // W zale¿noœci od tego która biblioteka zosta³a
-            // wybrana przypisz zmierzony czas w odpowiednie]
+            //W zale¿noœci od tego która biblioteka zosta³a
+            //wybrana przypisz zmierzony czas w odpowiednie]
             // miejsce
             if (conversionType.Equals(Conversion.C))
             {
