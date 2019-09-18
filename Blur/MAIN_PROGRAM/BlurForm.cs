@@ -1,11 +1,3 @@
-/*
- * Klasa g³ówna programu zawieraj¹ca GUI programu.
- * Implementuje w³aœciwy wygl¹d aplikacji.
- * Obs³uguje ¿¹dania u¿ytkownika za pomoc¹ dostêpnych metod interfejsu u¿ytkownika.
- * 
- */
-
-
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -57,8 +49,8 @@ namespace MAIN_PROGRAM
 
         #region Functions
 
-        // Funkcja konwertuj¹ca bitmapê na tablicê dwuwymiarow¹
-        // @param bitmap - bitmapa przekaza do programu przez u¿ytkownika
+        // Function converting bitmap into 2D array
+        // @param bitmap of input image
         private void BitmapToArray(Bitmap bitmap)
         {
             // Zczytaj wysokoœæ bitmapy
@@ -97,10 +89,10 @@ namespace MAIN_PROGRAM
             }
         }
 
-        // Funkcja konwertuj¹ca tablicê na bitmapê
+        // Function converting 2D array into bitmap
+        // @param array of bytes
         private void ArrayToBitmap(byte[][] array)
         {
-            // Alokujemy pamiêæ dla wynikowej bitmapy
             outputBitmap = new Bitmap(arrayWidth / 3, arrayHeight);
 
             for (int y = 0; y < arrayHeight; y++)
@@ -117,7 +109,7 @@ namespace MAIN_PROGRAM
             }
         }
 
-        // Funkcja kopiuj¹ca oryginaln¹ tablicê do wyjœciowej tablicy
+        // Function converting input array into an output array
         private void CopyOriginalToOutputArray()
         {
             outputArray = new byte[arrayHeight][];
@@ -131,33 +123,25 @@ namespace MAIN_PROGRAM
             }
         }
 
-        // Funkcja wykonuj¹ca w³aœciw¹ konwersjê obrazu na blur
+        // Main function assigned to Convert action
         private void ToBlur()
         {
-            // Definicja opcji do ustawieñ wspó³bie¿noœci
+            // Parallels options contain amount of threads chosen by user
             var options = new ParallelOptions()
             {
                 MaxDegreeOfParallelism = threadsAmount
             };
 
-            // Wykonaj konwersjê
             Parallel.ForEach(outputArray, options, (row, state, index) =>
             {
-                // Wysokoœæ lokalnej tablicy obliczanej na podstawie
-                // wybranego przez u¿ytkownika promienia
+                // Depending on radius passed by the user height of a local
+                // array is being calculated
                 int localArrayHeight = 1 + 2 * radius;
 
-                // Lokalna tablica
                 byte[] surroundingArea;
 
-                // Utwórz lokaln¹ tablicê odzwierciedlaj¹c¹ bezpoœredni
-                // obszar wokó³ zadanego wiersza obliczanego przez dany
-                // w¹tek. Obszar ten jest zale¿ny od wybranego przez
-                // u¿ytkownika promienia 
                 surroundingArea = new byte[localArrayHeight * arrayWidth];
 
-                // Je¿eli indeks wiersza znajduje siê w przedziale od
-                // górnego marginesu do promienia
                 if (index >= 0 && index < radius)
                 {
                     for (int j = 0; j < localArrayHeight; ++j)
@@ -188,19 +172,12 @@ namespace MAIN_PROGRAM
 
                     }
                 }
-                // Je¿eli indeks wiersza znajduje siê w miejscu, gdzie
-                // zawsze bêdzie obszar do pobrania (nie wykracza poza
-                // marginesy z ¿adnej strony)
                 else if (index >= radius && index < (arrayHeight - radius))
                 {
-                    // Przeiteruj przez ca³¹ tablicê wejœciow¹ dla danego
-                    // obszaru i przekopiuj z niej elementy do lokalnej
-                    // tablicy, która bedzie przekazana do DLL
                     for (int j = 0; j < localArrayHeight; ++j)
                     {
                         for (int i = 0; i < arrayWidth; i += 3)
                         {
-                            // Przekopiuj wszystkie wartoœci RBG
                             surroundingArea[(j * (arrayWidth)) + i] = inputArray[index - radius + j][i];
                             surroundingArea[(j * (arrayWidth)) + i + 1] = inputArray[index - radius + j][i + 1];
                             surroundingArea[(j * (arrayWidth)) + i + 2] = inputArray[index - radius + j][i + 2];
@@ -208,8 +185,6 @@ namespace MAIN_PROGRAM
                     }
 
                 }
-                // Je¿eli indeks wiersza znajduje siê w przedziale od
-                // dolnego promienia do dolnego marginesu bitmapy
                 else if (index >= (arrayHeight - radius) && index < (arrayHeight - 1))
                 {
                     for (int j = 0; j < localArrayHeight; ++j)
@@ -241,12 +216,12 @@ namespace MAIN_PROGRAM
                     }
                 }
 
-                // Dla DLL napisanej w C
+                // Use C DLL
                 if (conversionType.Equals(Conversion.C))
                 {
                     BlurTransformRowC(arrayWidth, localArrayHeight, radius, row, surroundingArea);
                 }
-                // Dla DLL napisanej w ASM
+                // Use ASM DLL
                 else if (conversionType.Equals(Conversion.ASM))
                 {
                     BlurTransformRowASM(arrayWidth, localArrayHeight, row, surroundingArea, radius);
@@ -326,11 +301,8 @@ namespace MAIN_PROGRAM
             return;
         }
 
-        // Przycisk konwersji uruchamiaj¹cy dzia³anie w³aœciwe programu
         private void Convert_Btn_Click(object sender, EventArgs e)
         {
-            // Sprawdzenie najwa¿niejszych flag z miejsc, gdzie u¿ytkownik
-            // jest zobligowany do wprowadzenia manualnie informacji
             if (inputPathSet == false || outputPathSet == false || conversionMethodSet == false)
             {
                 MessageBox.Show("Fill all fields before running the application!", "Conversion error",
@@ -338,32 +310,20 @@ namespace MAIN_PROGRAM
                 return;
             }
 
-            // Pobierz wartoœci z textboxów odpowiadaj¹cych parametrom
-            // wywo³ywanego programy
             Int32.TryParse(Radius_Tbx.Text, out int RadiusValueFromTheTbx);
             Int32.TryParse(Threads_Tbx.Text, out int ThreadsValueFromTheTbx);
 
-            // Przypisz pobrane wartoœci od odpowiednich zmiennych
-            // przekazywanych póŸniej do bibliotek
             this.threadsAmount = ThreadsValueFromTheTbx;
             this.radius = RadiusValueFromTheTbx;
 
-            // Skopiuj tablicê wejœciow¹ do tablicy wyjœciowej
             this.CopyOriginalToOutputArray();
 
-            // Rozpoczij diagnostykê mierzenia czasu
             var watch = System.Diagnostics.Stopwatch.StartNew();
             this.ToBlur();
             watch.Stop();
-            // Po wykonaniu algorytmu zatrzymaj stoper
             
-            // Przypisz zmierzony czas do zmiennej w celu jej
-            // póŸniejszego odczytania
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            //W zale¿noœci od tego która biblioteka zosta³a
-            //wybrana przypisz zmierzony czas w odpowiednie]
-            // miejsce
             if (conversionType.Equals(Conversion.C))
             {
                 C_ExeTime_Tbx.Text = elapsedMs.ToString();
@@ -373,14 +333,10 @@ namespace MAIN_PROGRAM
                 ASM_ExeTime_Tbx.Text = elapsedMs.ToString();
             }
 
-            // W celu pokazania efektu koñcowego skonwertuj
-            // wynikow¹ tablicê wyjœciow¹ do bitmapy
             this.ArrayToBitmap(outputArray);
 
-            // Ustaw bitmapê w okienku w programie
             Output_Picture_Box.Image = outputBitmap;
 
-            // Zapisz bitmapê do wskazanego pliku
             outputBitmap.Save(outputPicturePath);
         }
 
