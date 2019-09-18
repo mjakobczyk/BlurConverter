@@ -7,22 +7,14 @@
 
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MAIN_PROGRAM
 {
-    public partial class Form1 : Form
+    public partial class BlurForm : Form
     {
         #region Imports
 
@@ -268,7 +260,7 @@ namespace MAIN_PROGRAM
 
         #region Constructor
 
-        public Form1()
+        public BlurForm()
         {
             InitializeComponent();
             C_RadioBtn.Checked = true;

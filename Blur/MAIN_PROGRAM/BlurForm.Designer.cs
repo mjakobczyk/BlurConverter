@@ -1,6 +1,6 @@
 ﻿namespace MAIN_PROGRAM
 {
-    partial class Form1
+    partial class BlurForm
     {
         /// <summary>
         /// Required designer variable.

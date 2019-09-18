@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D69BCAD1-661F-498B-8F15-E88E8A9512E6}</ProjectGuid>
     <RootNamespace>DLL_C</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -80,6 +80,9 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
+    <Link>
+      <NoEntryPoint>false</NoEntryPoint>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -89,7 +92,7 @@
     </ClCompile>
     <PostBuildEvent>
       <Message>Copy DLL_C from the original directory to the bin folder of the project</Message>
-      <Command>xcopy /y /d "$(Outdir)DLL_C.dll" "$(SolutionDir)MAIN_PROGRAM\bin\Debug\DLL_C.dll"</Command>
+      <Command>copy /y /d "$(Targetdir)DLL_C.dll" "$(SolutionDir)MAIN_PROGRAM\bin\Debug\DLL_C.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
